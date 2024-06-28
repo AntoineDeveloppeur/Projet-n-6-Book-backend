@@ -1,5 +1,6 @@
 const Books = require('../models/book')
 const fs = require('fs')
+require('../functions/calculate_average_rating')
 
 exports.getAllBooks = (req, res, next) => {
     console.log('lapplication reçoit la consigne de donner tous les bouquins')
@@ -25,6 +26,10 @@ exports.postABook = (req, res, next) => {
     console.log('bookObject', bookObject)
     delete bookObject.userId
     console.log('req.body.title', bookObject.title)
+    console.log('bookObject', bookObject)
+    console.log('bookObject.ratings.grade', bookObject.ratings.grade)
+    console.log('bookObject.ratings[0]', bookObject.ratings[0])
+    console.log('bookObject.ratings[0].grade', bookObject.ratings[0].grade)
 
     const newBook = new Books({
         userId: req.auth.userId,
@@ -35,9 +40,12 @@ exports.postABook = (req, res, next) => {
         }`,
         year: bookObject.year,
         genre: bookObject.genre,
-        ratings: [{ userId: req.auth.userId, grade: bookObject.ratings.grade }], // La notation est laissé vide, à voir comment la base de donnée accepte les propriétés vide
+        ratings: [
+            { userId: req.auth.userId, grade: bookObject.ratings[0].grade },
+        ],
         averageRating: 0,
     })
+
     console.log('newbook', newBook)
     newBook
         .save()
@@ -130,12 +138,12 @@ exports.rateABook = (req, res, next) => {
     Books.findOne({ _id: req.params.id })
         .then((bookObject) => {
             console.log('je suis rentré dans le then de findOne de rateaBook')
-            res.status(200).json({ message: 'tout est cool' })
             console.log('bookObject.ratings', bookObject.ratings)
-            const userRateAlreadyThisBook = bookObject.ratings.find(
+            const userAlreadyRateThisBook = bookObject.ratings.find(
                 (rating) => rating.userId === req.auth.userId
             )
-            if (userRateAlreadyThisBook) {
+            console.log('userAlreadyRateThisBook', userAlreadyRateThisBook)
+            if (userAlreadyRateThisBook) {
                 console.log("l'utilisateur a déjà noté ce livre")
                 res.status(403).json({
                     message: "l'utilisateur à déjà noté le livre",
@@ -146,36 +154,53 @@ exports.rateABook = (req, res, next) => {
                 // ici il faut ajouter un objet avec le rating de l'utilisateur
                 bookObject.ratings.push({
                     userId: req.auth.userId,
-                    rating: req.body.rating,
+                    grade: req.body.rating,
                 })
                 console.log('bookObject.ratings', bookObject.ratings)
                 console.log('bookObject', bookObject)
+                Books.updateOne(
+                    { _id: req.params.id },
+                    { $set: { ratings: bookObject.ratings } }
+                )
+                    .then(() => {
+                        console.log('Notation livre mis à jour')
+                        Books.findOne({ _id: req.params.id })
+                            .then((book) => {
+                                console.log('book', book)
+                                const averageRatingX =
+                                    book.ratings.reduce(
+                                        (sum, rating) => sum + rating.grade,
+                                        0
+                                    ) / book.ratings.length
+                                console.log('averageRatingX', averageRatingX)
+                                console.log('book.ratings', book.ratings)
+                                // la note de l'average n'est pas mise à jour
+                                Books.updateOne(
+                                    { _id: req.params.id },
+                                    { $set: { averageRating: averageRatingX } }
+                                )
+                                    .then(() =>
+                                        res.status(200).json({
+                                            message: 'Note moyenne mise à jour',
+                                        })
+                                    )
+                                    .catch((error) => {
+                                        console.log(
+                                            'je suis dans le catch de updateone average rating'
+                                        )
+
+                                        res.status(400).json({ error })
+                                    })
+                            })
+                            .catch((error) => {
+                                console.log(
+                                    'je suis dans le catch de findone avant update de average rating'
+                                )
+                                res.status(404).json({ error })
+                            })
+                    })
+                    .catch((error) => res.status(400).json({ error }))
             }
-
-            //     const newBookObjectRatings = bookObject.ratings.map(
-            //         (rating) => rating
-            //     )
-            //     console.log('newBookObjectRatings', newBookObjectRatings)
-            // }
-
-            // } else {
-            //     console.log('bokkObject.ratin', bookObject.rating)
-            //     const newBookRatingObject = bookObject.rating
-            //     newBookRatingObject.push(req.body)
-            //     Books.updateOne(
-            //         { _id: req.params.id },
-            //         { $set: { rating: newBookRatingObject } }
-            //     )
-            //         .then(() => {
-            //             res.status(200)
-            //             Books.findOne({ _id: req.params.id }).then(
-            //                 (bookObject) => {
-            //                     bookObject
-            //                 }
-            //             )
-            //         })
-            //         .catch((error) => res.status(400).json({ error }))
-            // }
         })
         .catch((error) => {
             console.log('Livre non trouvé')
