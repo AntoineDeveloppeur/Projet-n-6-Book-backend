@@ -60,7 +60,16 @@ exports.postABook = (req, res, next) => {
         })
 }
 
-exports.getBestRatings = (req, res, next) => {}
+exports.getBestRatings = (req, res, next) => {
+    Books.find()
+        .then((AllBooks) => {
+            AllBooks.sort((a, b) => a.averageRating - b.averageRating)
+            const ThreeBestBooks = [AllBooks[0], AllBooks[1], AllBooks[2]]
+            console.log('AllBooks sorted', ThreeBestBooks)
+            res.status(201).json({ message: ThreeBestBooks })
+        })
+        .catch((error) => res.status(400).json({ error }))
+}
 
 exports.modifyABook = (req, res, next) => {
     console.log('je suis dans la fonction modify a book')
@@ -174,7 +183,6 @@ exports.rateABook = (req, res, next) => {
                                     ) / book.ratings.length
                                 console.log('averageRatingX', averageRatingX)
                                 console.log('book.ratings', book.ratings)
-                                // la note de l'average n'est pas mise à jour
                                 Books.updateOne(
                                     { _id: req.params.id },
                                     { $set: { averageRating: averageRatingX } }
@@ -185,17 +193,10 @@ exports.rateABook = (req, res, next) => {
                                         })
                                     )
                                     .catch((error) => {
-                                        console.log(
-                                            'je suis dans le catch de updateone average rating'
-                                        )
-
                                         res.status(400).json({ error })
                                     })
                             })
                             .catch((error) => {
-                                console.log(
-                                    'je suis dans le catch de findone avant update de average rating'
-                                )
                                 res.status(404).json({ error })
                             })
                     })
