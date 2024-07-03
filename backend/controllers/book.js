@@ -36,10 +36,10 @@ exports.postABook = (req, res, next) => {
         title: bookObject.title,
         author: bookObject.author,
         // Grâce à l'utilisation de express.static je n'ai pas besoin de récupérer le protocole et le domaine pour ajouter l'image
-        // imageUrl: `${req.protocol}://${req.get('host')}/images/resized_${
-        //     req.file.filename
-        // }`,
-        imageUrl: `/images/resized_${req.file.filename}`,
+        imageUrl: `${req.protocol}://${req.get('host')}/images/resized_${
+            req.file.filename
+        }`,
+        // imageUrl: `/images/resized_${req.file.filename}`,
 
         year: bookObject.year,
         genre: bookObject.genre,
@@ -64,14 +64,19 @@ exports.postABook = (req, res, next) => {
 }
 
 exports.getBestRatings = (req, res, next) => {
+    console.log('je suis dans getBestRatings')
     Books.find()
         .then((AllBooks) => {
-            AllBooks.sort((a, b) => a.averageRating - b.averageRating)
+            console.log('je suis dans then de Books.find')
+            AllBooks.sort((a, b) => b.averageRating - a.averageRating)
             const ThreeBestBooks = [AllBooks[0], AllBooks[1], AllBooks[2]]
             console.log('AllBooks sorted', ThreeBestBooks)
-            res.status(201).json({ message: ThreeBestBooks })
+            res.status(201).json(ThreeBestBooks)
         })
-        .catch((error) => res.status(400).json({ error }))
+        .catch((error) => {
+            console.log('je suis dans le catch Books.find')
+            res.status(400).json({ error })
+        })
 }
 
 exports.modifyABook = (req, res, next) => {
@@ -79,7 +84,9 @@ exports.modifyABook = (req, res, next) => {
     const bookObject = req.file
         ? {
               ...JSON.parse(req.body.book),
-              imageUrl: `/images/${req.file.filename}`,
+              imageUrl: `${req.protocol}://${req.get('host')}/images/resized_${
+                  req.file.filename
+              }`,
           }
         : { ...req.body }
     delete bookObject._userId
@@ -117,7 +124,7 @@ exports.deleteABook = (req, res, next) => {
         .then((book) => {
             if (book.userId === req.auth.userId) {
                 const filename = book.imageUrl.split('/images')[1]
-                fs.unlink(`images/${filename}`, () => {
+                fs.unlink(`images/resized_${filename}`, () => {
                     Books.deleteOne({ _id: req.params.id })
                         .then(() => {
                             console.log('deletion effectué')

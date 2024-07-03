@@ -10,18 +10,6 @@ require('dotenv').config()
 
 const app = express()
 
-// // CORS configuration
-// const corsOptions = {
-//     origin: '*', // Adjust this to match your frontend's origin
-//     methods: 'GET,POST,PUT,DELETE,OPTIONS',
-//     allowedHeaders: 'Content-Type, Authorization',
-// }
-
-// app.use(cors(corsOptions))
-
-// // Handle preflight OPTIONS request
-// app.options('*', cors(corsOptions))
-
 app.use((req, res, next) => {
     res.setHeader('Access-Control-Allow-Origin', '*')
     res.setHeader(
@@ -52,7 +40,7 @@ module.exports = app
  *
  */
 
-// Cela indique à Express qu'il faut gérer la ressource images de manière statique
+// Cela permet aux images d'être accessible publiquement. C'est-à-dire qu'avec l'URL de l'image donné aux front-end, celui-ci peut la charger
 app.use('/images', express.static(path.join(__dirname, 'images')))
 
 // Il faut ajouter la requête nécessaire pour montrer les livres
