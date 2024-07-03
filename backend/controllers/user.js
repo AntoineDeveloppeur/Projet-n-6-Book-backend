@@ -1,11 +1,12 @@
 const bcrypt = require('bcrypt')
 const User = require('../models/user')
 const jwt = require('jsonwebtoken')
+require('dotenv').config()
 
 exports.signup = (req, res, next) => {
     console.log('je suis dans signup', req.body.password)
     bcrypt
-        .hash(req.body.password, 1)
+        .hash(req.body.password, 10)
         .then((hash) => {
             console.log(hash)
             const userbook = new User({
@@ -43,12 +44,6 @@ exports.login = (req, res, next) => {
                     .compare(req.body.password, user.password)
                     .then((valid) => {
                         if (!valid) {
-                            console.log(
-                                'mot de pass incorect user password',
-                                user.password,
-                                'req.body.password',
-                                req.body.password
-                            )
                             res.status(401).json({
                                 message: 'mot de pass incorect',
                             })
@@ -57,7 +52,7 @@ exports.login = (req, res, next) => {
                                 userId: user._id,
                                 token: jwt.sign(
                                     { userId: user._id },
-                                    'Rmni%355bX3tPNUV*e(E', // C'est la clé secrète qui permet de générer le token
+                                    process.env.SECRETPHRASEFORTOKEN, // C'est la clé secrète qui permet de générer le token
                                     { expiresIn: '24h' }
                                 ),
                             })
@@ -65,7 +60,7 @@ exports.login = (req, res, next) => {
                                 userId: user._id,
                                 token: jwt.sign(
                                     { userId: user._id },
-                                    'Rmni%355bX3tPNUV*e(E', // C'est la clé secrète qui permet de générer le token
+                                    process.env.SECRETPHRASEFORTOKEN, // C'est la clé secrète qui permet de générer le token
                                     { expiresIn: '24h' }
                                 ),
                             })

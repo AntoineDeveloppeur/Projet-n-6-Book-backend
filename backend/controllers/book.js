@@ -35,9 +35,12 @@ exports.postABook = (req, res, next) => {
         userId: req.auth.userId,
         title: bookObject.title,
         author: bookObject.author,
-        imageUrl: `${req.protocol}://${req.get('host')}/images/${
-            req.file.filename
-        }`,
+        // Grâce à l'utilisation de express.static je n'ai pas besoin de récupérer le protocole et le domaine pour ajouter l'image
+        // imageUrl: `${req.protocol}://${req.get('host')}/images/resized_${
+        //     req.file.filename
+        // }`,
+        imageUrl: `/images/resized_${req.file.filename}`,
+
         year: bookObject.year,
         genre: bookObject.genre,
         ratings: [
@@ -76,12 +79,9 @@ exports.modifyABook = (req, res, next) => {
     const bookObject = req.file
         ? {
               ...JSON.parse(req.body.book),
-              imageUrl: `${req.protocol}://${req.get('host')}/images/${
-                  req.file.filename
-              }`,
+              imageUrl: `/images/${req.file.filename}`,
           }
-        : { ...req.body } //pourquoi a-t-on besoin du spread operator ici. Sous quel forme la requête arrive-t-elle sans fichier ?
-    // On pourrait très bien mettre req.body tout court
+        : { ...req.body }
     delete bookObject._userId
     console.log('bookObject', bookObject)
     Books.findOne({ _id: req.params.id })
@@ -178,7 +178,8 @@ exports.rateABook = (req, res, next) => {
                                 console.log('book', book)
                                 const averageRatingX =
                                     book.ratings.reduce(
-                                        (sum, rating) => sum + rating.grade,
+                                        (sum, rating) =>
+                                            rating.grade & (sum + rating.grade),
                                         0
                                     ) / book.ratings.length
                                 console.log('averageRatingX', averageRatingX)

@@ -39,7 +39,6 @@ app.use(express.json())
 
 mongoose
     .connect(
-        // 'mongodb+srv://antoineverove:TPKIpIN61zJvWmp5@antoineserver.fndalaw.mongodb.net/?retryWrites=true&w=majority&appName=Antoineserver',
         `mongodb+srv://${process.env.DB_USERNAME}:${process.env.DB_PASSWORD}@${process.env.DB_NAME}.fndalaw.mongodb.net/?retryWrites=true&w=majority&appName=${process.env.APPNAME}`
     )
     .then(() => console.log('Connexion à MongoDB réussie !'))
