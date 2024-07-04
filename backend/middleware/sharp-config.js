@@ -6,9 +6,10 @@ const compressFile = async (req, res, next) => {
     if (req.file) {
         try {
             const { filename, path: filePath } = req.file
-            const newFilePath = path.join('images', `resized_${filename}`)
+            const resizedPath = `images/resized_${filename}`
+            const compressedPath = `images/compressed_${filename}`
 
-            console.log('newfilepath', newFilePath)
+            console.log('resizedPath', resizedPath)
             console.log('req.file.filename', req.file.filename)
             console.log(
                 'lien complet',
@@ -16,16 +17,34 @@ const compressFile = async (req, res, next) => {
                     req.file.filename
                 }`
             )
-            // await sharp(`/images/${req.file.filename}`)
-            // .webp({ quality: 20 })
-            // .toFile(`/images/compressed${req.file.filename}`)
+            // Le premier sharp redimenssionne l'image
             sharp(filePath)
                 .resize({ width: 206, fit: sharp.fit.contain })
-                .toFile(newFilePath)
+                .toFile(resizedPath)
                 .then(() => {
                     fs.unlink(filePath, (error) => {
-                        req.file.path = newFilePath
-                        next()
+                        // La deuxième sharp compresse l'image
+                        sharp(resizedPath)
+                            .webp({ quality: 30 })
+                            .toFile(compressedPath)
+                            .then(() => {
+                                fs.unlink(resizedPath, (error) => {
+                                    req.file.path = compressedPath
+                                    console.log(
+                                        'req.file.path après compression',
+                                        req.file.path
+                                    )
+                                    console.log(
+                                        'compressedpath',
+                                        compressedPath
+                                    )
+                                    next()
+                                })
+                            })
+                            .catch((err) => {
+                                console.log(err)
+                                return next()
+                            })
                     })
                 })
                 .catch((err) => {

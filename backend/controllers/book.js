@@ -36,9 +36,7 @@ exports.postABook = (req, res, next) => {
         title: bookObject.title,
         author: bookObject.author,
         // Grâce à l'utilisation de express.static je n'ai pas besoin de récupérer le protocole et le domaine pour ajouter l'image
-        imageUrl: `${req.protocol}://${req.get('host')}/images/resized_${
-            req.file.filename
-        }`,
+        imageUrl: `${req.protocol}://${req.get('host')}/${req.file.path}`,
         // imageUrl: `/images/resized_${req.file.filename}`,
 
         year: bookObject.year,
@@ -147,7 +145,6 @@ exports.deleteABook = (req, res, next) => {
         .catch((error) => res.status(500).json({ error }))
 }
 
-//En cours de construction
 exports.rateABook = (req, res, next) => {
     console.log('req.params.id', req.params.id)
     console.log('req.body', req.body)
