@@ -53,7 +53,7 @@ exports.login = (req, res, next) => {
                                 token: jwt.sign(
                                     { userId: user._id },
                                     process.env.SECRETPHRASEFORTOKEN, // C'est la clé secrète qui permet de générer le token
-                                    { expiresIn: '24h' }
+                                    { expiresIn: '48h' }
                                 ),
                             })
                             res.status(200).json({
@@ -61,7 +61,7 @@ exports.login = (req, res, next) => {
                                 token: jwt.sign(
                                     { userId: user._id },
                                     process.env.SECRETPHRASEFORTOKEN, // C'est la clé secrète qui permet de générer le token
-                                    { expiresIn: '24h' }
+                                    { expiresIn: '48h' }
                                 ),
                             })
                         }
