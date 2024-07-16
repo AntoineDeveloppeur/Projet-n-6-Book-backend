@@ -1,6 +1,5 @@
 const Books = require('../models/book')
 const fs = require('fs')
-require('../functions/calculate_average_rating')
 
 exports.getAllBooks = (req, res, next) => {
     Books.find()
@@ -83,14 +82,12 @@ exports.modifyABook = (req, res, next) => {
                     { ...bookObject, _id: req.params._id }
                 )
                     .then(() => {
-
                         res.status(200).json({ message: 'book modifié' })
                     })
                     .catch((error) => res.status(400).json({ error }))
             }
         })
         .catch((error) => {
-
             res.status(401).json({ error })
         })
 }
@@ -142,21 +139,24 @@ exports.rateABook = (req, res, next) => {
                     .then(() => {
                         Books.findOne({ _id: req.params.id })
                             .then((book) => {
-                                const averageRatingX =
-                                    book.ratings.reduce(
-                                        (sum, rating) =>
-                                            rating.grade & (sum + rating.grade),
-                                        0
-                                    ) / book.ratings.length
+                                const averageRating =
+                                    book.ratings.reduce((sum, rating) => {
+                                        return sum + rating.grade
+                                    }, 0) / book.ratings.length
+                                console.log('averageRating', averageRating)
                                 Books.updateOne(
                                     { _id: req.params.id },
-                                    { $set: { averageRating: averageRatingX } }
+                                    { $set: { averageRating: averageRating } }
                                 )
-                                    .then(() =>
-                                        res.status(200).json({
-                                            message: 'Note moyenne mise à jour',
-                                        })
-                                    )
+                                    .then(() => {
+                                        Books.findOne({ _id: req.params.id })
+                                            .then((book) =>
+                                                res.status(200).json(book)
+                                            )
+                                            .catch((error) =>
+                                                res.status(400).json({ error })
+                                            )
+                                    })
                                     .catch((error) => {
                                         res.status(400).json({ error })
                                     })
