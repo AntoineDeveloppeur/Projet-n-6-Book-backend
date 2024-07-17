@@ -94,7 +94,7 @@ exports.deleteABook = (req, res, next) => {
         .then((book) => {
             if (book.userId === req.auth.userId) {
                 const filename = book.imageUrl.split('/images')[1]
-                fs.unlink(`images/resized_${filename}`, () => {
+                fs.unlink(`images/compressed_${filename}`, () => {
                     Books.deleteOne({ _id: req.params.id })
                         .then(() => {
                             res.status(201).json({
