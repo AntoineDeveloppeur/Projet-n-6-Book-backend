@@ -25,10 +25,7 @@ exports.postABook = (req, res, next) => {
         userId: req.auth.userId,
         title: bookObject.title,
         author: bookObject.author,
-        // Grâce à l'utilisation de express.static je n'ai pas besoin de récupérer le protocole et le domaine pour ajouter l'image
         imageUrl: `${req.protocol}://${req.get('host')}/${req.file.path}`,
-        // imageUrl: `/images/resized_${req.file.filename}`,
-
         year: bookObject.year,
         genre: bookObject.genre,
         ratings: [
@@ -63,9 +60,9 @@ exports.modifyABook = (req, res, next) => {
     const bookObject = req.file
         ? {
               ...JSON.parse(req.body.book),
-              imageUrl: `${req.protocol}://${req.get('host')}/images/resized_${
-                  req.file.filename
-              }`,
+              imageUrl: `${req.protocol}://${req.get(
+                  'host'
+              )}/images/compressed_${req.file.filename}`,
           }
         : { ...req.body }
     delete bookObject._userId
@@ -143,7 +140,6 @@ exports.rateABook = (req, res, next) => {
                                     book.ratings.reduce((sum, rating) => {
                                         return sum + rating.grade
                                     }, 0) / book.ratings.length
-                                console.log('averageRating', averageRating)
                                 Books.updateOne(
                                     { _id: req.params.id },
                                     { $set: { averageRating: averageRating } }
